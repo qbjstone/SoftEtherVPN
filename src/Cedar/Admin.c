@@ -726,9 +726,8 @@ void AdminWebProcPost(CONNECTION *c, SOCK *s, HTTP_HEADER *h, UINT post_data_siz
 	if (RecvAll(s, data, post_data_size, s->SecureMode))
 	{
 		c->JsonRpcAuthed = true;
-#ifndef	GC_SOFTETHER_OSS
+
 		RemoveDosEntry(c->Listener, s);
-#endif	// GC_SOFTETHER_OSS
 
 		// Divide url_target into URL and query string
 		StrCpy(url, sizeof(url), url_target);
@@ -767,9 +766,8 @@ void AdminWebProcGet(CONNECTION *c, SOCK *s, HTTP_HEADER *h, char *url_target)
 	}
 
 	c->JsonRpcAuthed = true;
-#ifndef	GC_SOFTETHER_OSS
+
 	RemoveDosEntry(c->Listener, s);
-#endif	// GC_SOFTETHER_OSS
 
 	// Divide url_target into URL and query string
 	StrCpy(url, sizeof(url), url_target);
@@ -1199,9 +1197,7 @@ void JsonRpcProcOptions(CONNECTION *c, SOCK *s, HTTP_HEADER *h, char *url_target
 
 	c->JsonRpcAuthed = true;
 
-#ifndef	GC_SOFTETHER_OSS
 	RemoveDosEntry(c->Listener, s);
-#endif	// GC_SOFTETHER_OSS
 
 	AdminWebSendBody(s, 200, "OK", NULL, 0, NULL, NULL, NULL, h);
 }
@@ -1228,9 +1224,7 @@ void JsonRpcProcGet(CONNECTION *c, SOCK *s, HTTP_HEADER *h, char *url_target)
 
 	c->JsonRpcAuthed = true;
 
-#ifndef	GC_SOFTETHER_OSS
 	RemoveDosEntry(c->Listener, s);
-#endif	// GC_SOFTETHER_OSS
 
 	// Divide url_target into URL and query string
 	StrCpy(url, sizeof(url), url_target);
@@ -1357,9 +1351,7 @@ void JsonRpcProcPost(CONNECTION *c, SOCK *s, HTTP_HEADER *h, UINT post_data_size
 
 		c->JsonRpcAuthed = true;
 
-#ifndef	GC_SOFTETHER_OSS
 		RemoveDosEntry(c->Listener, s);
-#endif	// GC_SOFTETHER_OSS
 
 		if (json_req == NULL || json_req_object == NULL)
 		{
@@ -1644,8 +1636,8 @@ PACK *AdminDispatch(RPC *rpc, char *name, PACK *p)
 	DECLARE_RPC("GetSpecialListener", RPC_SPECIAL_LISTENER, StGetSpecialListener, InRpcSpecialListener, OutRpcSpecialListener)
 	DECLARE_RPC("GetAzureStatus", RPC_AZURE_STATUS, StGetAzureStatus, InRpcAzureStatus, OutRpcAzureStatus)
 	DECLARE_RPC("SetAzureStatus", RPC_AZURE_STATUS, StSetAzureStatus, InRpcAzureStatus, OutRpcAzureStatus)
-	DECLARE_RPC("GetDDnsInternetSettng", INTERNET_SETTING, StGetDDnsInternetSetting, InRpcInternetSetting, OutRpcInternetSetting)
-	DECLARE_RPC("SetDDnsInternetSettng", INTERNET_SETTING, StSetDDnsInternetSetting, InRpcInternetSetting, OutRpcInternetSetting)
+	DECLARE_RPC("GetDDnsInternetSetting", INTERNET_SETTING, StGetDDnsInternetSetting, InRpcInternetSetting, OutRpcInternetSetting)
+	DECLARE_RPC("SetDDnsInternetSetting", INTERNET_SETTING, StSetDDnsInternetSetting, InRpcInternetSetting, OutRpcInternetSetting)
 	// RPC function declaration: till here
 
 
@@ -1831,8 +1823,8 @@ DECLARE_SC("SetSpecialListener", RPC_SPECIAL_LISTENER, ScSetSpecialListener, InR
 DECLARE_SC("GetSpecialListener", RPC_SPECIAL_LISTENER, ScGetSpecialListener, InRpcSpecialListener, OutRpcSpecialListener)
 DECLARE_SC("GetAzureStatus", RPC_AZURE_STATUS, ScGetAzureStatus, InRpcAzureStatus, OutRpcAzureStatus)
 DECLARE_SC("SetAzureStatus", RPC_AZURE_STATUS, ScSetAzureStatus, InRpcAzureStatus, OutRpcAzureStatus)
-DECLARE_SC("GetDDnsInternetSettng", INTERNET_SETTING, ScGetDDnsInternetSetting, InRpcInternetSetting, OutRpcInternetSetting)
-DECLARE_SC("SetDDnsInternetSettng", INTERNET_SETTING, ScSetDDnsInternetSetting, InRpcInternetSetting, OutRpcInternetSetting)
+DECLARE_SC("GetDDnsInternetSetting", INTERNET_SETTING, ScGetDDnsInternetSetting, InRpcInternetSetting, OutRpcInternetSetting)
+DECLARE_SC("SetDDnsInternetSetting", INTERNET_SETTING, ScSetDDnsInternetSetting, InRpcInternetSetting, OutRpcInternetSetting)
 // RPC call function declaration: till here
 
 // Setting VPN Gate Server Configuration
@@ -7350,6 +7342,7 @@ UINT StGetLink(ADMIN *a, RPC_CREATE_LINK *t)
 		Copy(&t->Policy, k->Policy, sizeof(POLICY));
 
 		t->CheckServerCert = k->CheckServerCert;
+		t->AddDefaultCA = k->AddDefaultCA;
 		t->ServerCert = CloneX(k->ServerCert);
 	}
 	Unlock(k->lock);
@@ -7465,6 +7458,7 @@ UINT StSetLink(ADMIN *a, RPC_CREATE_LINK *t)
 		k->Option->RequireMonitorMode = false;	// Disable monitor mode
 
 		k->CheckServerCert = t->CheckServerCert;
+		k->AddDefaultCA = t->AddDefaultCA;
 		k->ServerCert = CloneX(t->ServerCert);
 	}
 	Unlock(k->lock);
@@ -7561,6 +7555,7 @@ UINT StCreateLink(ADMIN *a, RPC_CREATE_LINK *t)
 		// setting of verifying server certification
 		// 
 		k->CheckServerCert = t->CheckServerCert;
+		k->AddDefaultCA = t->AddDefaultCA;
 		k->ServerCert = CloneX(t->ServerCert);
 
 		// stay this off-line
@@ -13635,6 +13630,7 @@ void InRpcCreateLink(RPC_CREATE_LINK *t, PACK *p)
 	InRpcPolicy(&t->Policy, p);
 
 	t->CheckServerCert = PackGetBool(p, "CheckServerCert");
+	t->AddDefaultCA = PackGetBool(p, "AddDefaultCA");
 	b = PackGetBuf(p, "ServerCert");
 	if (b != NULL)
 	{
@@ -13657,6 +13653,7 @@ void OutRpcCreateLink(PACK *p, RPC_CREATE_LINK *t)
 	OutRpcPolicy(p, &t->Policy);
 
 	PackAddBool(p, "CheckServerCert", t->CheckServerCert);
+	PackAddBool(p, "AddDefaultCA", t->AddDefaultCA);
 	if (t->ServerCert != NULL)
 	{
 		BUF *b;
@@ -13702,12 +13699,14 @@ void InRpcEnumLink(RPC_ENUM_LINK *t, PACK *p)
 
 		PackGetUniStrEx(p, "AccountName", e->AccountName, sizeof(e->AccountName), i);
 		PackGetStrEx(p, "Hostname", e->Hostname, sizeof(e->Hostname), i);
-		PackGetStrEx(p, "ConnectedHubName", e->HubName, sizeof(e->HubName), i);
+		if (PackGetStrEx(p, "ConnectedHubName", e->HubName, sizeof(e->HubName), i) == false)
+		{
+			PackGetStrEx(p, "TargetHubName", e->HubName, sizeof(e->HubName), i);
+		}
 		e->Online = PackGetBoolEx(p, "Online", i);
 		e->ConnectedTime = PackGetInt64Ex(p, "ConnectedTime", i);
 		e->Connected = PackGetBoolEx(p, "Connected", i);
 		e->LastError = PackGetIntEx(p, "LastError", i);
-		PackGetStrEx(p, "LinkHubName", e->HubName, sizeof(e->HubName), i);
 	}
 }
 void OutRpcEnumLink(PACK *p, RPC_ENUM_LINK *t)
@@ -14658,19 +14657,19 @@ void InRpcNodeInfo(NODE_INFO *t, PACK *p)
 	PackGetStr(p, "HubName", t->HubName, sizeof(t->HubName));
 	PackGetData2(p, "UniqueId", t->UniqueId, sizeof(t->UniqueId));
 
-	t->ClientProductVer = PackGetInt(p, "ClientProductVer");
-	t->ClientProductBuild = PackGetInt(p, "ClientProductBuild");
-	t->ServerProductVer = PackGetInt(p, "ServerProductVer");
-	t->ServerProductBuild = PackGetInt(p, "ServerProductBuild");
+	t->ClientProductVer = LittleEndian32(PackGetInt(p, "ClientProductVer"));
+	t->ClientProductBuild = LittleEndian32(PackGetInt(p, "ClientProductBuild"));
+	t->ServerProductVer = LittleEndian32(PackGetInt(p, "ServerProductVer"));
+	t->ServerProductBuild = LittleEndian32(PackGetInt(p, "ServerProductBuild"));
 	t->ClientIpAddress = PackGetIp32(p, "ClientIpAddress");
 	PackGetData2(p, "ClientIpAddress6", t->ClientIpAddress6, sizeof(t->ClientIpAddress6));
-	t->ClientPort = PackGetInt(p, "ClientPort");
+	t->ClientPort = LittleEndian32(PackGetInt(p, "ClientPort"));
 	t->ServerIpAddress = PackGetIp32(p, "ServerIpAddress");
 	PackGetData2(p, "ServerIpAddress6", t->ServerIpAddress6, sizeof(t->ServerIpAddress6));
-	t->ServerPort = PackGetInt(p, "ServerPort2");
+	t->ServerPort = LittleEndian32(PackGetInt(p, "ServerPort2"));
 	t->ProxyIpAddress = PackGetIp32(p, "ProxyIpAddress");
 	PackGetData2(p, "ProxyIpAddress6", t->ProxyIpAddress6, sizeof(t->ProxyIpAddress6));
-	t->ProxyPort = PackGetInt(p, "ProxyPort");
+	t->ProxyPort = LittleEndian32(PackGetInt(p, "ProxyPort"));
 }
 void OutRpcNodeInfo(PACK *p, NODE_INFO *t)
 {
@@ -14691,19 +14690,19 @@ void OutRpcNodeInfo(PACK *p, NODE_INFO *t)
 	PackAddStr(p, "HubName", t->HubName);
 	PackAddData(p, "UniqueId", t->UniqueId, sizeof(t->UniqueId));
 
-	PackAddInt(p, "ClientProductVer", t->ClientProductVer);
-	PackAddInt(p, "ClientProductBuild", t->ClientProductBuild);
-	PackAddInt(p, "ServerProductVer", t->ServerProductVer);
-	PackAddInt(p, "ServerProductBuild", t->ServerProductBuild);
+	PackAddInt(p, "ClientProductVer", LittleEndian32(t->ClientProductVer));
+	PackAddInt(p, "ClientProductBuild", LittleEndian32(t->ClientProductBuild));
+	PackAddInt(p, "ServerProductVer", LittleEndian32(t->ServerProductVer));
+	PackAddInt(p, "ServerProductBuild", LittleEndian32(t->ServerProductBuild));
 	PackAddIp32(p, "ClientIpAddress", t->ClientIpAddress);
 	PackAddData(p, "ClientIpAddress6", t->ClientIpAddress6, sizeof(t->ClientIpAddress6));
-	PackAddInt(p, "ClientPort", t->ClientPort);
+	PackAddInt(p, "ClientPort", LittleEndian32(t->ClientPort));
 	PackAddIp32(p, "ServerIpAddress", t->ServerIpAddress);
 	PackAddData(p, "ServerIpAddress6", t->ServerIpAddress6, sizeof(t->ServerIpAddress6));
-	PackAddInt(p, "ServerPort2", t->ServerPort);
+	PackAddInt(p, "ServerPort2", LittleEndian32(t->ServerPort));
 	PackAddIp32(p, "ProxyIpAddress", t->ProxyIpAddress);
 	PackAddData(p, "ProxyIpAddress6", t->ProxyIpAddress6, sizeof(t->ProxyIpAddress6));
-	PackAddInt(p, "ProxyPort", t->ProxyPort);
+	PackAddInt(p, "ProxyPort", LittleEndian32(t->ProxyPort));
 }
 
 // RPC_SESSION_STATUS

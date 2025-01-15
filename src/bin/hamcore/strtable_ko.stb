@@ -218,7 +218,10 @@ ERR_145 이 작업을 수행 할 수 없습니다. VPN Gate 공개 VPN 중계 �
 ERR_146 VPN Gate 서비스가 VPN Client에서 실행중인 경우이 설정 화면에서 VPN Gate 서비스를 중지 할 수 없습니다. VPN Gate 서비스를 중지하려면 VPN Client 연결 관리자 설정 도구를 사용하십시오.
 ERR_147 이 기능은 오픈 소스 버전 SoftEther VPN은 아직 구현되어 있지 않습니다.
 ERR_148 Windows 시스템이 대기 상태로 전환 중이기 때문에 VPN 통신이 끊어졌습니다.
-
+ERR_149 대상 VPN 서버의 인증서가 지정된 호스트 이름과 일치하지 않습니다.
+ERR_150	양쪽에서 지원되는 TLS 버전을 찾을 수 없습니다. 한 쪽은 다른 쪽에서 비활성화된 이전 TLS 버전을 사용하고 있을 수 있습니다.
+ERR_151	양쪽에서 지원하는 사용 가능한 암호 알고리즘을 찾지 못했거나 지정된 알고리즘이 서버 인증서와 호환되지 않습니다.
+ERR_152	TLS 핸드셰이크가 실패했습니다.
 
 
 # 라이센스 관계
@@ -579,12 +582,14 @@ HUB_AO_MaxLoggedPacketsPerMinute 분당 패킷 로그에 저장할 수있는 최
 HUB_AO_DoNotSaveHeavySecurityLogs 저장 집약적 보안 로그를 저장하지 않는 설정을합니다.
 HUB_AO_DropBroadcastsInPrivacyFilterMode 원본 및 대상의 두 세션이 개인 정보 보호 필터 모드의 경우 브로드 캐스트 패킷을 파기합니다.
 HUB_AO_DropArpInPrivacyFilterMode 원본 및 대상의 두 세션이 개인 정보 보호 필터 모드의 경우 ARP 패킷을 삭제합니다.
+HUB_AO_AllowSameUserInPrivacyFilterMode			원본 및 대상의 두 세션 사용자가 동일할 경우 개인 정보 보호 필터 모드일지라도 패킷을 허용합니다.
 HUB_AO_SuppressClientUpdateNotification VPN Client의 업데이트 알림 화면의 표시를 억제합니다.
 HUB_AO_FloodingSendQueueBufferQuota 패킷의 가상 HUB 내에서 홍수 동작시에 소비하는 것을 허용하는 대기열의 버퍼 크기 제한 (바이트)를 지정합니다. 쿼터는 모든 연결된 VPN 세션의 전송 큐의 총 길이에 전체적으로 적용됩니다. 0을 지정하면 제한됩니다. 이 옵션은 홍수 패킷이 다발하는 네트워크에서 메모리 소비량이 증가하는 문제를 해결하기 위해 사용할 수 있습니다.
 HUB_AO_AssignVLanIdByRadiusAttribute VLAN ID의 동적 할당 기능을 활성화합니다. VPN 연결 사용자 개체의 보안 정책에 VLAN ID가 지정되지 않은 경우 각 VPN 세션은 사용자 인증 한 RADIUS 서버에서 반환되는 RADIUS 속성 값을 기준으로 VLAN이 할당됩니다. RADIUS 속성 중 "Tunnel-Pvt-Group-ID"(ID=81)의 값이 사용됩니다. 데이터 형식은 문자열이어야합니다.
 HUB_AO_SecureNAT_RandomizeAssignIp 이 항목을 1 (유효)의 경우 SecureNAT 기능의 가상 DHCP 서버는 DHCP 클라이언트에 할당 된 IP 주소를 지정된 IP 주소 풀에서 사용하지 않는 주소에서 임의로 선택하도록합니다. 또한, 기본 동작은 미사용 주소 중 첫 번째 주소를 할당 할 수 있도록되어 있습니다.
 HUB_AO_DetectDormantSessionInterval 이 항목이 0이 아닌 경우, 지정된 초 비활성이었다 VPN 세션을 드 폰 망토 상태 (최대 절전 모드)로 식별합니다. 드 폰 망토 상태의 VPN 세션에 가상 HUB에서 홍수되어야 패킷이 침수 없습니다.
 HUB_AO_NoPhysicalIPOnPacketLog 이 항목이 0 (사용)의 경우 패킷 로그에 원본 및 대상 VPN 세션의 물리적 연결 원래 VPN 클라이언트의 IP 주소가 기록되지 않도록합니다.
+HUB_AO_AllowEapMatchUserByCert	If you enable (set to 1) this option, the Virtual Hub will attempt to match the EAP Identity not only with usernames, but also with user certificates during the PPP EAP authentication flow.
 
 
 # Caps 관계
@@ -840,12 +845,14 @@ CM_ST_NO_VLAN -
 CM_ST_USE_ENCRYPT 암호화 사용
 CM_ST_USE_ENCRYPT_TRUE 예 (암호화 알고리즘:%S)
 CM_ST_USE_ENCRYPT_TRUE2 잔
+CM_ST_USE_ENCRYPT_TRUE3 예 (%S 암호화 알고리즘:%S)
 CM_ST_USE_ENCRYPT_FALSE 아니오 (암호화 없음)
 CM_ST_USE_COMPRESS 압축 사용
 CM_ST_UDP_ACCEL_ENABLED UDP 가속화 기능을 지원
 CM_ST_UDP_ACCEL_USING UDP 속도 기능을 사용 중
 CM_ST_RUDP TCP over UDP (NAT Traversal)
 CM_ST_UNDERLAY_PROTOCOL 실제 통신에 사용되는 프로토콜
+CM_ST_PROTOCOL_DETAILS	프로토콜 세부 정보
 CM_ST_COMPRESS_TRUE 예 (약 %u %%)
 CM_ST_COMPRESS_FALSE 아니오 (압축 없음)
 CM_ST_SESSION_NAME 세션 이름
@@ -965,11 +972,10 @@ CM_VPN_FILE_IMPORT_NG 연결 설정 파일을 가져올 수 없습니다. VPN Cl
 CM_VLAN_INSTALLING 기다려주십시오...
 CM_SECURE_MUST_LOCAL 현재 원격 컴퓨터의 VPN Client 서비스에 연결하여 관리하고 있기 때문에 스마트 카드의 설정을 할 수 없습니다.
 CM_DETAIL_MODE_LINK_STR 캐스케이드는 항상 브리지/라우터 모드에서 연결이 활성화되어 있습니다.
-CM_TRAY_INITING SoftEther VPN 클라이언트 연결 관리자
-CM_TRAY_NOT_CONNECTED SoftEther VPN 클라이언트 연결 관리자 \r\n 연결되어 있지 않습니다
-CM_TRAY_CONNECTED_0 SoftEther VPN 클라이언트 연결 관리자 \r\n %u 개의 서버와의 연결이 완료 %u 개의 서버에 연결을 시도합니다
-CM_TRAY_CONNECTED_1 SoftEther VPN 클라이언트 연결 관리자 \r\n %u 개의 서버에 연결을 시도합니다
-CM_TRAY_CONNECTED_2 SoftEther VPN 클라이언트 연결 관리자 \r\n %u 개의 서버와 연결이 완료하고 있습니다
+CM_TRAY_INITING SoftEther VPN
+CM_TRAY_NOT_CONNECTED \r\n연결되어 있지 않습니다
+CM_TRAY_CONNECTING \r\n연결 중
+CM_TRAY_CONNECTED \r\n연결됨
 CM_TRAY_MENU_1_SHOW 연결 관리자를 표시 (&S)
 CM_TRAY_MENU_1_HIDE 연결 관리자를 닫기 (&O)
 CM_TRAY_MENU_2_QUIT 연결 관리자 프로그램의 종료 (&X)
@@ -1750,8 +1756,9 @@ LS_HUB_STOP 가상 HUB "%S"를 중지했습니다.
 LS_HUB_MAC 가상 HUB "%S"의 MAC 주소는 "%S"입니다.
 LS_NODE_INFO_TAG 클라이언트 제품 이름 "%S"클라이언트 버전 %u 클라이언트 빌드 번호 %u 서버 제품 이름 "%S"서버 버전 %u 서버 빌드 번호 %u 클라이언트 OS 이름 "%S"클라이언트 OS 버전 "%S"클라이언트 제품 ID "%S"클라이언트 호스트 이름 "%S"클라이언트 IP 주소 "%S"클라이언트 포트 번호 %u 서버 호스트 이름 "%S"서버 IP 주소 "%S" 서버 포트 번호 %u 프록시 호스트 이름 "%S"프록시 IP 주소 "%S"프록시 포트 번호 %u 가상 HUB 이름 "%S"클라이언트 고유 ID "%S"
 LS_CONNECTION_START_1 클라이언트 (IP 주소 %S 호스트 이름 "%S"포트 번호 %u)에 대응하는 연결 "%S"가 작성되었습니다.
+LS_SSL_START_ERROR	연결 "%S"에 대한 SSL 통신을 시작하지 못했습니다. 오류:%s (코드 %u)
 LS_CONNECTION_END_1 연결 "%S"가 종료되었습니다.
-LS_SSL_START 연결 "%S"에 대한 SSL 통신이 시작되었습니다. 암호화 알고리즘 명은 "%S"입니다.
+LS_SSL_START 연결 "%S"에 대한 SSL 통신이 시작되었습니다. 프로토콜 버전은 %S입니다. 암호화 알고리즘 명은 "%S"입니다.
 LS_CONNECTION_ERROR 연결 "%S"는 이유로 "%s"(코드 %u)로 종료되었습니다.
 LS_FARMMEMBER_NOT_ADMIN 연결 "%S": 서버는 클러스터 멤버이지만, 클라이언트는 가상 HUB "%S"관리자 사용자 "%S"이외로 직접 연결하려고 시도했습니다. 클라이언트가 제공 한 사용자 이름은 "%S"입니다. 액세스는 허용되지 않습니다.
 LS_HUB_NOT_FOUND 연결 "%S": 클라이언트가 연결을 시도하는 가상 HUB "%S"는 서버에 존재하지 않습니다.
@@ -1779,6 +1786,8 @@ LS_LICENSE_VIOLATION_DETECTED 라이센스 위반을 감지했습니다. 다른 
 LS_API_AUTH_OK			HTTPS API client "%r:%u" (%S): Administration mode: "%S": The embedded HTTPS web server accepted the successful login. Username: "%S", Method: "%S", Path: "%S"
 LS_API_AUTH_ERROR		HTTPS API client "%r:%u" (%S): The embedded HTTPS web server refused a login attempt. Username: "%S", Method: "%S", Path: "%S"
 LS_API_RPC_CALL			HTTPS API client "%r:%u" (%S): The client called a JSON-API. Method: "%S", Returned error code: %u (0 = success), Returned error message: "%s"
+LS_AZURE_START			클라이언트 (IP 주소 %S 포트 번호 %u)에서 VPN Azure 연결 요청을 받았습니다.
+LS_AZURE_SSL_ERROR		VPN Azure 릴레이 서버와 SSL 통신을 시작하지 못했습니다. 오류:%s (코드 %u)
 
 
 # (Proto 로그)
@@ -1896,6 +1905,7 @@ LH_AUTH_PASSWORD 암호 인증
 LH_AUTH_PLAIN_PASSWORD 외부 서버 인증
 LH_AUTH_CERT 인증서 인증
 LH_AUTH_TICKET 티켓 인증
+LH_AUTH_EXTERNAL 외부 서버 인증
 LH_AUTH_WIREGUARD_KEY WireGuard public key authentication
 LH_AUTH_OPENVPN_CERT OpenVPN certificate authentication
 LH_AUTH_RADIUS_NOT_SUPPORT 연결 "%S"사용자 "%S"의 인증 방법으로 RADIUS 인증 또는 Active Directory 인증 (NT 도메인 인증)이 지정 되었으나, 현재 VPN Server 버전은 "%S"이기 때문에 RADIUS 인증 또는 Active Directory 인증 (NT 도메인 인증)을 사용할 수 없습니다. 연결이 거부됩니다.
@@ -2069,6 +2079,7 @@ LC_DELETE_ACCOUNT 연결 설정 "%s"를 삭제했습니다.
 LC_RENAME_ACCOUNT 연결 설정 "%s"의 이름을 "%s"로 변경했습니다.
 LC_CONNECT 연결 설정 "%s"연결 처리를 시작했습니다.
 LC_CONNECT_1 연결 설정 "%s": %u 번째 연결 동작을 시작합니다.
+LC_SSL_CONNECTED 연결 설정 "%s": SSL 통신이 시작되었습니다. 프로토콜 버전은 %S입니다. 암호화 알고리즘 명은 "%S"입니다.
 LC_CONNECT_2 연결 설정 "%s": 연결이 완료되었습니다. 세션 이름:"%S"
 LC_CONNECT_ERROR 연결 설정 "%s": 연결이 끊어 졌는지 연결에 실패했습니다. 이유:%s (코드 %u)
 LC_DISCONNECT 연결 설정 "%s"를 끊습니다.
@@ -2306,6 +2317,7 @@ R_SOCKS5 SOCKS5 프록시 서버를 통해 연결 (&S)
 B_PROXY_CONFIG 프록시 서버 연결 설정 (&2)
 STATIC11 서버 인증서 검증 옵션 (&F):
 R_CHECK_CERT 서버 인증서를 반드시 확인한다 (&3)
+R_TRUST_DEFAULT 시스템 인증서 저장소 신뢰
 B_TRUST 신뢰하는 인증 기관의 인증서 관리 (&4)
 B_SERVER_CERT 고유 인증서 등록 (&R)
 B_VIEW_SERVER_CERT 고유 인증서보기 (&5)
@@ -2390,6 +2402,8 @@ STATIC17 기타 설정 (&G):
 R_NO_ROUTING 라우팅 테이블의 조정 작업을 수행하지 (&R)
 STATIC18 이 설정 화면의 설정은 시스템 관리자의 지시가있을 경우, 네트워크 및 보안에 대해 상세한 지식을 가지고있는 경우를 제외하고는 변경하지 마십시오.
 STATIC19 VoIP/QoS 지원 기능을 사용하면 IP 전화 패킷 등의 우선 순위가 높은 패킷을 VPN에서 고속으로 전송할 수 있습니다.
+STATIC20				Source IP Address:
+STATIC21				Source Port Number:
 R_DISABLE_QOS VoIP/QoS 지원 기능을 비활성화 (&Q)
 IDOK & OK
 IDCANCEL 취소
@@ -4379,6 +4393,7 @@ CMD_ACCOUNT_COLUMN_PROXY_USERNAME 프록시 서버의 사용자 이름
 CMD_ACCOUNT_COLUMN_SERVER_CERT_USE 서버 인증서 확인
 CMD_ACCOUNT_COLUMN_SERVER_CERT_NAME 등록 된 서버 별 인증서
 CMD_ACCOUNT_COLUMN_RETRY_ON_SERVER_CERT	Retry on Untrusted Server Certificate
+CMD_ACCOUNT_COLUMN_ADD_DEFAULT_CA 시스템 인증서 저장소 신뢰
 CMD_ACCOUNT_COLUMN_DEVICE_NAME 연결에 사용할 장치 이름
 CMD_ACCOUNT_COLUMN_AUTH_TYPE 인증의 종류
 CMD_ACCOUNT_COLUMN_AUTH_USERNAME 사용자 이름
@@ -5477,6 +5492,20 @@ CMD_CascadeServerCertDisable_Args CascadeServerCertDisable [name]
 CMD_CascadeServerCertDisable_[name] 설정을 변경 계단식의 이름을 지정합니다.
 
 
+# CascadeDefaultCAEnable command
+CMD_CascadeDefaultCAEnable	        Enable Trust System Certificate Store Option
+CMD_CascadeDefaultCAEnable_Help	    When server certificate verification is enabled, use this to enable trusting certificates from the system trust store. \nIf server certificate verification is disabled, this option does nothing.
+CMD_CascadeDefaultCAEnable_Args	    CascadeDefaultCAEnable [name]
+CMD_CascadeDefaultCAEnable_[name]	Specify the name of the Cascade Connection whose setting you want to change.
+
+
+# CascadeDefaultCADisable command
+CMD_CascadeDefaultCADisable         Disable Trust System Certificate Store Option
+CMD_CascadeDefaultCADisable_Help    When server certificate verification is enabled, use this to disable trusting certificates from the system trust store. \nIf server certificate verification is disabled, this option does nothing.
+CMD_CascadeDefaultCADisable_Args	CascadeDefaultCADisable [name]
+CMD_CascadeDefaultCADisable_[name]	Specify the name of the Cascade Connection whose setting you want to change.
+
+
 # CascadeServerCertSet 명령
 CMD_CascadeServerCertSet 계단식 서버 별 인증서 설정
 CMD_CascadeServerCertSet_Help 현재 관리하고있는 가상 HUB에 등록되어있는 계단식 지정하고 계단식가 VPN Server에 연결할 때 연결하려는 VPN Server가 제시하는 SSL 인증서와 동일한 인증서를 미리 등록합니다. \n 계단식 서버 인증서 검증 옵션이 활성화되어있는 경우 연결할 서버의 SSL 인증서를 미리이 명령에서 계단식 설정에 저장할하거나 가상 HUB의 신뢰 인증 기관의 인증서 목록에 서버의 SSL 인증서를 서명 한 루트 인증서를 CAAdd 명령 등으로 등록되어 있어야합니다. \n 계단식 서버 인증서 검증 옵션이 활성화되어있는 상태에서 연결 한 VPN Server의 인증서를 신뢰할 수없는 경우 즉시 연결을 해제하고 재 시도를 반복합니다. \n이 명령은 클러스터로 작동하는 VPN Server의 가상 HUB에서는 실행되지 않습니다.
@@ -6418,7 +6447,7 @@ CMD_VpnAzureGetStatus_PRINT_CONNECTED VPN Azure 클라우드 서버에 연결 �
 CMD_VpnAzureGetStatus_PRINT_HOSTNAME VPN Azure 서비스에서 호스트 이름
 
 
-# VpnAzureSetStatus 명령
+# VpnAzureSetEnable 명령
 CMD_VpnAzureSetEnable VPN Azure 기능의 활성화/비활성화
 CMD_VpnAzureSetEnable_Help VPN Azure 기능을 활성화하거나 비활성화합니다. \n \nVPN Azure하여 회사의 PC에 가정이나 이동 PC에서 매우 쉽게 VPN 연결 할 수 있습니다. VPN 연결 중에 회사의 컴퓨터를 통해 사내 LAN의 다른 서버에 액세스 할 수 있습니다. \n 회사 컴퓨터 (VPN Server)는 글로벌 IP 주소는 필요하지 않습니다. 방화벽이나 NAT 뒤에라도 작동하고 네트워크 관리자의 설정은 필요하지 않습니다. VPN 클라이언트가 될 자택의 PC에서는 Windows에 표준 부속의 SSTP VPN 클라이언트를 사용할 수 있습니다. \nVPN Azure는 SoftEther VPN Server를 사용하시는 분들은 누구나 무료로 이용할 수 클라우드 VPN 서비스입니다. 소프트 이사 회사에 의해 운영되고 있습니다. 사용법은 http://www.vpnazure.net/에 게재되어 있습니다. \n \nVPN Azure 호스트 이름은 동적 DNS 서비스 호스트 이름의 도메인 부분을 "vpnazure.net"로 변경 한 것이 사용됩니다. 호스트 이름을 변경하려면 DynamicDnsSetHostname 명령을 사용하십시오. \n \n이 명령을 실행하려면 VPN Server 관리자 권한이 있어야합니다. \n이 명령은 VPN Bridge에서는 실행되지 않습니다. \n이 명령은 클러스터로 작동하는 VPN Server의 가상 HUB에서는 실행되지 않습니다.
 CMD_VpnAzureSetEnable_Args VpnAzureSetEnable [yes|no]
@@ -6785,6 +6814,20 @@ CMD_AccountRetryOnServerCertDisable	Disable VPN connection retry if server certi
 CMD_AccountRetryOnServerCertDisable_Help	When a VPN Connection Setting registered on the VPN Client is specified and that VPN Connection Setting connects to a VPN Server, use this to disable the option to retry connection if Server certificate cannot be trusted.
 CMD_AccountRetryOnServerCertDisable_Args	AccountRetryOnServerCertDisable [name]
 CMD_AccountRetryOnServerCertDisable_[name]	Specify the name of the VPN Connection Setting whose setting you want to change.
+
+
+# AccountDefaultCAEnable command
+CMD_AccountDefaultCAEnable	        Enable Trust System Certificate Store Option
+CMD_AccountDefaultCAEnable_Help	    When server certificate verification is enabled, use this to enable trusting certificates from the system trust store. \nIf server certificate verification is disabled, this option does nothing.
+CMD_AccountDefaultCAEnable_Args	    AccountDefaultCAEnable [name]
+CMD_AccountDefaultCAEnable_[name]	Specify the name of the VPN Connection Setting whose setting you want to change.
+
+
+# AccountDefaultCADisable command
+CMD_AccountDefaultCADisable         Disable Trust System Certificate Store Option
+CMD_AccountDefaultCADisable_Help    When server certificate verification is enabled, use this to disable trusting certificates from the system trust store. \nIf server certificate verification is disabled, this option does nothing.
+CMD_AccountDefaultCADisable_Args	AccountDefaultCADisable [name]
+CMD_AccountDefaultCADisable_[name]	Specify the name of the VPN Connection Setting whose setting you want to change.
 
 
 # AccountServerCertSet 명령

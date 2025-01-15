@@ -218,6 +218,10 @@ ERR_145					不可接受的操作。使用 VPN Gate 實用工具修改 VPN Gate 
 ERR_146					VPN Gate 服務運行在 VPN 用戶端程式內。在此螢幕上，你不能停止 VPN Gate 服務。使用 VPN 用戶端管理器來啟用或禁用 VPN Gate 服務。
 ERR_147					不支援此功能。它尚未在 SoftEther VPN 的開源版本上實施。
 ERR_148					VPN 連接被中斷，因為該系統被暫停。
+ERR_149					目標 VPN Server 的證書與指定的主機名稱不匹配。
+ERR_150					找不到連接雙方都支持的 TLS 版本。這通常意味著一方可能正在使用已被另一方禁用的過時的 TLS 版本。
+ERR_151					找不到連接雙方都支持的加密演算法，或者指定的演算法與伺服器憑證不相容。
+ERR_152					TLS 握手失敗。
 
 
 #關於許可證
@@ -569,6 +573,8 @@ HUB_AO_DetectDormantSessionInterval			If you set this option to non-zero value, 
 HUB_AO_NoPhysicalIPOnPacketLog				If you set this option to non-zero value, then the physical IP addresses of VPN clients of either the source VPN session or the destination VPN session will not be recorded on the packet log file.
 HUB_AO_UseHubNameAsDhcpUserClassOption		If you set this option to non-zero value, then the Virtual Hub Name will be added to a DHCP request to an external DHCP server as the "User-Class" option. This allows to use separate pools of IP addresses for each Virtual Hub. (For only L2TP/IPsec and OpenVPN sessions.)
 HUB_AO_UseHubNameAsRadiusNasId				If you set this option to non-zero value, then the NAS-Identifier RADIUS attribute will be set to a name of the Virtual Hub. This allows to determine on RADIUS server whether access to the Virtual Hub should be granted or denied.
+HUB_AO_AllowEapMatchUserByCert				If you enable (set to 1) this option, the Virtual Hub will attempt to match the EAP Identity not only with usernames, but also with user certificates during the PPP EAP authentication flow.
+HUB_AO_AllowSameUserInPrivacyFilterMode			Allow packets if both the source and destination session users are the same, even in PrivacyFilter mode.
 
 
 #關於失敗連接對話方塊
@@ -845,12 +851,14 @@ CM_ST_NO_VLAN			－
 CM_ST_USE_ENCRYPT		加密
 CM_ST_USE_ENCRYPT_TRUE	已啟用 (演算法: %S)
 CM_ST_USE_ENCRYPT_TRUE2	已啟用
+CM_ST_USE_ENCRYPT_TRUE3	已啟用 (%S 演算法: %S)
 CM_ST_USE_ENCRYPT_FALSE	已禁用 (不加密)
 CM_ST_USE_COMPRESS		使用壓縮
 CM_ST_UDP_ACCEL_ENABLED	支援 UDP 加速
 CM_ST_UDP_ACCEL_USING	UDP 加速已啟動
 CM_ST_RUDP				TCP over UDP (NAT 穿透)
 CM_ST_UNDERLAY_PROTOCOL	物理底層協定
+CM_ST_PROTOCOL_DETAILS	協定詳細資訊
 CM_ST_COMPRESS_TRUE		是 (%u %%)
 CM_ST_COMPRESS_FALSE	否 (不壓縮)
 CM_ST_SESSION_NAME		會話名
@@ -970,11 +978,10 @@ CM_VPN_FILE_IMPORT_NG	無法導入 VPN 連接設置檔案。由於 VPN Client �
 CM_VLAN_INSTALLING		請稍候...
 CM_SECURE_MUST_LOCAL	因為目前您對遠端電腦進行連接並管理 VPN Client，因此無法修改智慧卡設置。
 CM_DETAIL_MODE_LINK_STR	使用級聯，則“通過橋接器，路由模式連接”始終啟用。
-CM_TRAY_INITING			VPN Client 管理器 (Developer Edition)
-CM_TRAY_NOT_CONNECTED	VPN Client 管理器 (Developer Edition)\r\n未連接
-CM_TRAY_CONNECTED_0		VPN Client 管理器 (Developer Edition)\r\n主動連接到%u個伺服器，並嘗試連接到 %u 個伺服器
-CM_TRAY_CONNECTED_1		VPN Client 管理器 (Developer Edition)\r\n嘗試連接到%u個伺服器
-CM_TRAY_CONNECTED_2		VPN Client 管理器 (Developer Edition)\r\n的 %u 個伺服器中的連接
+CM_TRAY_INITING			SoftEther VPN
+CM_TRAY_NOT_CONNECTED	\r\n未連接
+CM_TRAY_CONNECTING		\r\n正在連接
+CM_TRAY_CONNECTED		\r\n已連接
 CM_TRAY_MENU_1_SHOW		顯示 VPN Client 管理器(&S)
 CM_TRAY_MENU_1_HIDE		關閉 VPN Client 管理器(&O)
 CM_TRAY_MENU_2_QUIT		退出 VPN Client 管理器程式(&X)
@@ -1783,8 +1790,9 @@ LS_HUB_STOP				虛擬 HUB "%S" 已關閉。
 LS_HUB_MAC				虛擬 HUB "%S" 的 MAC 位址是 "%S"。
 LS_NODE_INFO_TAG		用戶端產品名："%S"，用戶端版本：%u，用戶端構建號：%u，服務端產品名："%S"，服務端版本：%u，服務端構建號：%u，用戶端作業系統名："%S"，用戶端作業系統版本："%S"，用戶端產品 ID："%S"，用戶端主機名稱："%S"，用戶端 IP 地址："%S"，用戶端埠號：%u，服務端主機名稱："%S"，服務端 IP 位址："%S"，服務端埠號：%u，代理主機名稱："%S"，代理 IP 位址："%S"，代理埠號：%u，虛擬 HUB 名："%S"，用戶端唯一 ID： "%S"
 LS_CONNECTION_START_1	用戶端 (IP 地址：%S，主機名稱："%S"，埠號：%u) 的連接 "%S" 已建立。
+LS_SSL_START_ERROR		無法啟動連接 "%S" 的 SSL 通信。錯誤: %s (代碼 %u)
 LS_CONNECTION_END_1		連接 "%S" 已結束。
-LS_SSL_START			連接 "%S" 的 SSL 通信已啟動。加密演算法名為 "%S"。
+LS_SSL_START			連接 "%S" 的 SSL 通信已啟動。協議版本是 %S。加密演算法名為 "%S"。
 LS_CONNECTION_ERROR		連接 "%S"因原因 "%s" (代碼 %u)已終止。
 LS_FARMMEMBER_NOT_ADMIN	連接 "%S": 服務端是群集成員，但用戶端在非管理員 (%S) 使用者情況下，嘗試直接與虛擬 HUB "%S" 連接。用戶端用戶名為 "%S"。訪問被拒絕。
 LS_HUB_NOT_FOUND		連接 "%S": 客戶端正在嘗試連接的虛擬 HUB "%S" 在服務端上不存在。
@@ -1812,6 +1820,8 @@ LS_LICENSE_VIOLATION_DETECTED	發現許可證違反錯誤，一個不同的 VPN 
 LS_API_AUTH_OK			HTTPS API client "%r:%u" (%S): Administration mode: "%S": The embedded HTTPS web server accepted the successful login. Username: "%S", Method: "%S", Path: "%S"
 LS_API_AUTH_ERROR		HTTPS API client "%r:%u" (%S): The embedded HTTPS web server refused a login attempt. Username: "%S", Method: "%S", Path: "%S"
 LS_API_RPC_CALL			HTTPS API client "%r:%u" (%S): The client called a JSON-API. Method: "%S", Returned error code: %u (0 = success), Returned error message: "%s"
+LS_AZURE_START			收到來自客戶端 (IP 地址：%S，埠號：%u) 的 VPN Azure 連接請求。
+LS_AZURE_SSL_ERROR		無法啟動與 VPN Azure 中繼伺服器的 SSL 通信。錯誤: %s (代碼 %u)
 
 
 # (Proto 日誌)
@@ -1932,6 +1942,7 @@ LH_AUTH_PASSWORD		密碼驗證
 LH_AUTH_PLAIN_PASSWORD	外部伺服器身份驗證
 LH_AUTH_CERT			證書驗證
 LH_AUTH_TICKET			票證驗證
+LH_AUTH_EXTERNAL		外部伺服器身份驗證
 LH_AUTH_WIREGUARD_KEY	WireGuard public key authentication
 LH_AUTH_OPENVPN_CERT	OpenVPN certificate authentication
 LH_AUTH_RADIUS_NOT_SUPPORT	連接 "%S": 用戶 "%S" 身份驗證方法 RADIUS 或 Active Directory (NT 域)，但 VPN Server 是 "%S"，因為 RADIUS 或 Active Directory (NT 域)不能使用。連接被拒絕。
@@ -2106,6 +2117,7 @@ LC_DELETE_ACCOUNT		已刪除 VPN 連接設置 "%s"。
 LC_RENAME_ACCOUNT		已變更 VPN 連接設置名 "%s" 為 "%s"。
 LC_CONNECT				已開始 VPN 連接設置 "%s" 的連接處理。
 LC_CONNECT_1			VPN 連接設置 "%s": 第 %u 次連接操作開始。
+LC_SSL_CONNECTED		VPN 連接設置 "%s": SSL 通信已啟動。協議版本是 %S。加密演算法名為 "%S"。
 LC_CONNECT_2			VPN 連接設置 "%s": 連接完成。會話名: "%S"。
 LC_CONNECT_ERROR		VPN 連接設置 "%s": 連接斷開或連接失敗。原因: %s (代碼 %u)
 LC_DISCONNECT			VPN 連接設置 "%s" 斷開中。
@@ -2342,6 +2354,7 @@ R_SOCKS5				通過 SOCKS5 代理伺服器連接(&S)
 B_PROXY_CONFIG			代理伺服器設置(&R)
 STATIC11				服務端證書驗證選項(&F):
 R_CHECK_CERT			總是驗證服務端證書(&C)
+R_TRUST_DEFAULT			信任系統憑證存放區
 B_TRUST					管理可信發證機關證書列表(&C)
 B_SERVER_CERT			指定特定證書(&S)
 B_VIEW_SERVER_CERT		查看特定證書(&V)
@@ -2426,6 +2439,8 @@ STATIC17				其它配置(&G):
 R_NO_ROUTING			不要調整路由表(&R)
 STATIC18				除非你得到系統管理員的同意或者你有網路和安全方面的專業知識，否則請保持此對話方塊的默認設置。
 STATIC19				VoIP / QoS 功能可以處理高優先級封包，如 IP 電話封包 (VoIP) 可以被更快的傳輸。
+STATIC20				Source IP Address:
+STATIC21				Source Port Number:
 R_DISABLE_QOS			禁用 VoIP / &QoS 功能
 IDOK					確定(&O)
 IDCANCEL				取消
@@ -4411,7 +4426,8 @@ CMD_ACCOUNT_COLUMN_PROXY_PORT	代理伺服器的埠號
 CMD_ACCOUNT_COLUMN_PROXY_USERNAME	代理伺服器的用戶名
 CMD_ACCOUNT_COLUMN_SERVER_CERT_USE	驗證伺服器憑證
 CMD_ACCOUNT_COLUMN_SERVER_CERT_NAME	註冊的伺服器個人證書
-CMD_ACCOUNT_COLUMN_RETRY_ON_SERVER_CERT	Retry on Untrusted Server Certificate
+CMD_ACCOUNT_COLUMN_RETRY_ON_SERVER_CERT	遇到不信任的證書時重試
+CMD_ACCOUNT_COLUMN_ADD_DEFAULT_CA   信任系統憑證存放區
 CMD_ACCOUNT_COLUMN_DEVICE_NAME	用於連接的設備名
 CMD_ACCOUNT_COLUMN_AUTH_TYPE	驗證類型
 CMD_ACCOUNT_COLUMN_AUTH_USERNAME	用戶名
@@ -4426,7 +4442,7 @@ CMD_ACCOUNT_COLUMN_BRIDGE_ROUTER	通過橋接器 / 路由模式連接
 CMD_ACCOUNT_COLUMN_MONITOR	通過監測模式連接
 CMD_ACCOUNT_COLUMN_NO_TRACKING	不要調整路由表
 CMD_ACCOUNT_COLUMN_QOS_DISABLE	不要使用 QoS 控制功能
-CMD_ACCOUNT_COLUMN_DISABLEUDP		Disable UDP Acceleration
+CMD_ACCOUNT_COLUMN_DISABLEUDP		禁用 UDP 加速功能
 
 
 # Debugging Information Collecting Tool
@@ -5514,6 +5530,20 @@ CMD_CascadeServerCertDisable_Args	CascadeServerCertDisable [name]
 CMD_CascadeServerCertDisable_[name]	指定級聯名稱來改變設置。
 
 
+# CascadeDefaultCAEnable 命令
+CMD_CascadeDefaultCAEnable	        啟用信任系統憑證存放區選項
+CMD_CascadeDefaultCAEnable_Help	    當啟用服務器憑證驗證時，使用此選項來啟用信任系統憑證存放區的證書。\n如果禁用服務器憑證驗證，則此選項不執行任何操作。
+CMD_CascadeDefaultCAEnable_Args	    CascadeDefaultCAEnable [name]
+CMD_CascadeDefaultCAEnable_[name]	指定級聯名稱來改變設置。
+
+
+# CascadeDefaultCADisable 命令
+CMD_CascadeDefaultCADisable         禁用信任系統憑證存放區選項
+CMD_CascadeDefaultCADisable_Help    當啟用服務器憑證驗證時，使用此選項來禁用信任系統憑證存放區的證書。\n如果禁用服務器憑證驗證，則此選項不執行任何操作。
+CMD_CascadeDefaultCADisable_Args	CascadeDefaultCADisable [name]
+CMD_CascadeDefaultCADisable_[name]	指定級聯名稱來改變設置。
+
+
 # CascadeServerCertSet 命令
 CMD_CascadeServerCertSet	設置級聯連接的伺服器特定證書
 CMD_CascadeServerCertSet_Help	指定已經在當前虛擬 HUB 註冊的級聯連接，當此連接和 VPN Server 之間通信時，事先將連接方提供的 SSL 證書註冊。\n如果啟用此選項，需要將在目標伺服器的證書事先通過指令設置到級聯的連接設置中，或者在虛擬 HUB 的可信任證書清單中，運行 CAAdd 指令，將有伺服器的 SSL 證書署名的路線證書添加進去。\n當啟用伺服器憑證驗證選項時，如果 VPN Server 提供的證書不可信，連接將斷開，並重試。\n此命令在集群虛擬 HUB 中不能運行。
@@ -6450,7 +6480,7 @@ CMD_VpnAzureGetStatus_PRINT_CONNECTED	至 VPN Azure 雲伺服器的連接建立
 CMD_VpnAzureGetStatus_PRINT_HOSTNAME	在 VPN Azure 服務上的本 VPN 伺服器的主機名稱
 
 
-# VpnAzureSetStatus command
+# VpnAzureSetEnable command
 CMD_VpnAzureSetEnable			啟用/禁用 VPN Azure 功能
 CMD_VpnAzureSetEnable_Help		啟用或禁用 VPN Azure 功能。\n\nVPN Azure 可以更容易地從你家裡的電腦到你辦公室的電腦建立一個 VPN 會話。當一個 VPN 連接建立了，您可以訪問您公司私人網路絡上的任何其他伺服器。\n在辦公室的電腦（VPN 伺服器）上，你並不需要一個全球 IP 位址。它可以在防火牆或 NAT 後面工作。無需網路系統管理員的配置。您可以在您的家用電腦使用 Windows 內置的 SSTP VPN 用戶端。\nVPN Azure 是一個雲 VPN 服務由 SoftEther 公司經營。VPN Azure 是免費的，可提供給任何人。訪問 http://www.vpnazure.net/ 查看詳細資訊和如何使用的說明。\n\nVPN Azure 主機名稱與動態 DNS 設置的主機名稱相同，但改變的功能變數名稱尾碼為“vpnazure.net”。要改變主機名稱使用 DynamicDnsSetHostname 命令。\n\n要執行此命令，你必須具有 VPN 伺服器管理員許可權。\n此命令不能在 VPN 橋接器上運行。\n以集群成員運行的 VPN 伺服器的虛擬 HUB 不能執行此命令。
 CMD_VpnAzureSetEnable_Args		VpnAzureSetEnable [yes|no]
@@ -6817,6 +6847,20 @@ CMD_AccountRetryOnServerCertDisable	Disable VPN connection retry if server certi
 CMD_AccountRetryOnServerCertDisable_Help	When a VPN Connection Setting registered on the VPN Client is specified and that VPN Connection Setting connects to a VPN Server, use this to disable the option to retry connection if Server certificate cannot be trusted.
 CMD_AccountRetryOnServerCertDisable_Args	AccountRetryOnServerCertDisable [name]
 CMD_AccountRetryOnServerCertDisable_[name]	Specify the name of the VPN Connection Setting whose setting you want to change.
+
+
+# AccountDefaultCAEnable 命令
+CMD_AccountDefaultCAEnable	        啟用信任系統憑證存放區選項
+CMD_AccountDefaultCAEnable_Help	    當啟用服務器憑證驗證時，使用此選項來啟用信任系統憑證存放區的證書。\n如果禁用服務器憑證驗證，則此選項不執行任何操作。
+CMD_AccountDefaultCAEnable_Args	    AccountDefaultCAEnable [name]
+CMD_AccountDefaultCAEnable_[name]	指定要更改設置的連接設置名。
+
+
+# AccountDefaultCADisable 命令
+CMD_AccountDefaultCADisable         禁用信任系統憑證存放區選項
+CMD_AccountDefaultCADisable_Help    當啟用服務器憑證驗證時，使用此選項來禁用信任系統憑證存放區的證書。\n如果禁用服務器憑證驗證，則此選項不執行任何操作。
+CMD_AccountDefaultCADisable_Args	AccountDefaultCADisable [name]
+CMD_AccountDefaultCADisable_[name]	指定要更改設置的連接設置名。
 
 
 # AccountServerCertSet 命令

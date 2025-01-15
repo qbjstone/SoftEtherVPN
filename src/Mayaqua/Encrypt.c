@@ -20,7 +20,9 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
+#endif
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 #include <openssl/pkcs7.h>
@@ -38,6 +40,13 @@
 #include <openssl/pem.h>
 #include <openssl/conf.h>
 #include <openssl/x509v3.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/provider.h>
+// Static oqsprovider initialization function
+#ifndef SKIP_OQS_PROVIDER
+	extern OSSL_provider_init_fn oqs_provider_init;
+#endif
+#endif
 
 #ifdef _MSC_VER
 	#include <intrin.h> // For __cpuid()
@@ -81,6 +90,12 @@
 LOCK *openssl_lock = NULL;
 
 int ssl_clientcert_index = 0;
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+static OSSL_PROVIDER *ossl_provider_legacy = NULL;
+static OSSL_PROVIDER *ossl_provider_default = NULL;
+static OSSL_PROVIDER *ossl_provider_oqsprovider = NULL;
+#endif
 
 LOCK **ssl_lock_obj = NULL;
 UINT ssl_lock_num;
@@ -336,6 +351,11 @@ MD *NewMdEx(char *name, bool hmac)
 #else
 		m->Ctx = EVP_MD_CTX_create();
 #endif
+		if (m->Ctx == NULL)
+		{
+			return NULL;
+		}
+
 		if (EVP_DigestInit_ex(m->Ctx, m->Md, NULL) == false)
 		{
 			Debug("NewMdEx(): EVP_DigestInit_ex() failed with error: %s\n", OpenSSL_Error());
@@ -704,7 +724,8 @@ UINT RsaPublicSize(K *k)
 // Hash a pointer to a 32-bit
 UINT HashPtrToUINT(void *p)
 {
-	UCHAR hash_data[MD5_SIZE];
+	UCHAR hash_data[SHA256_SIZE];
+	UCHAR hash_src[CANARY_RAND_SIZE + sizeof(void *)];
 	UINT ret;
 	// Validate arguments
 	if (p == NULL)
@@ -712,7 +733,11 @@ UINT HashPtrToUINT(void *p)
 		return 0;
 	}
 
-	Md5(hash_data, &p, sizeof(p));
+	Zero(hash_src, sizeof(hash_src));
+	Copy(hash_src + 0, GetCanaryRand(CANARY_RAND_ID_PTR_KEY_HASH), CANARY_RAND_SIZE);
+	Copy(hash_src + CANARY_RAND_SIZE, p, sizeof(void *));
+
+	Sha2_256(hash_data, hash_src, sizeof(hash_src));
 
 	Copy(&ret, hash_data, sizeof(ret));
 
@@ -3948,6 +3973,26 @@ void FreeCryptLibrary()
 	SSL_COMP_free_compression_methods();
 #endif
 #endif
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	if (ossl_provider_default != NULL)
+	{
+		OSSL_PROVIDER_unload(ossl_provider_default);
+		ossl_provider_default = NULL;
+	}
+
+	if (ossl_provider_legacy != NULL)
+	{
+		OSSL_PROVIDER_unload(ossl_provider_legacy);
+		ossl_provider_legacy = NULL;
+	}
+
+	if (ossl_provider_oqsprovider != NULL)
+	{
+		OSSL_PROVIDER_unload(ossl_provider_oqsprovider);
+		ossl_provider_oqsprovider = NULL;
+	}
+#endif
 }
 
 // Initialize the Crypt library
@@ -3964,6 +4009,18 @@ void InitCryptLibrary()
 	OpenSSL_add_all_digests();
 	ERR_load_crypto_strings();
 	SSL_load_error_strings();
+#endif
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	ossl_provider_default = OSSL_PROVIDER_load(NULL, "legacy");
+	ossl_provider_legacy = OSSL_PROVIDER_load(NULL, "default");
+
+	char *oqs_provider_name = "oqsprovider";
+	#ifndef SKIP_OQS_PROVIDER
+		// Registers "oqsprovider" as a provider -- necessary because oqsprovider is built in now.
+		OSSL_PROVIDER_add_builtin(NULL, oqs_provider_name, oqs_provider_init); 
+	#endif
+	ossl_provider_oqsprovider = OSSL_PROVIDER_load(NULL, oqs_provider_name);
 #endif
 
 	ssl_clientcert_index = SSL_get_ex_new_index(0, "struct SslClientCertInfo *", NULL, NULL, NULL);
@@ -4552,6 +4609,11 @@ DH_CTX *DhNew(char *prime, UINT g)
 	dh = ZeroMalloc(sizeof(DH_CTX));
 
 	dh->dh = DH_new();
+	if (dh->dh == NULL)
+	{
+		return NULL;
+	}
+	
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	dhp = BinToBigNum(buf->Buf, buf->Size);
 	dhg = BN_new();

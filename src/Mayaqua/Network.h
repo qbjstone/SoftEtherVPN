@@ -11,13 +11,24 @@
 #include "Encrypt.h"
 #include "Mayaqua.h"
 
+#include <openssl/ssl.h> // This is needed only for the SSL/TLS version defines
+
 #ifdef OS_UNIX
 #include <netinet/in.h>
+
+#ifdef UNIX_LINUX
+#include <pthread.h>
+#endif
 
 #ifdef UNIX_OPENBSD
 #include <pthread.h>
 #endif
+
+#ifdef UNIX_MACOS
+#include <pthread.h>
 #endif
+#endif
+
 
 // Dynamic Value
 struct DYN_VALUE
@@ -47,6 +58,10 @@ struct DYN_VALUE
 #define	MAX_NUM_IGNORE_ERRORS		1024
 
 #define	DEFAULT_CIPHER_LIST			"ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:DHE+CHACHA20:ECDHE+AES256:DHE+AES256:RSA+AES"
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#define PQ_GROUP_LIST				"X25519MLKEM768:p521_kyber1024:x25519_kyber768:P-521:X25519:P-256"
+#endif
 
 // SSL logging function
 //#define	ENABLE_SSL_LOGGING
@@ -288,6 +303,7 @@ struct ROUTE_ENTRY
 	UINT IfMetric;
 	UINT InterfaceID;
 	UINT64 InnerScore;
+	bool Active;
 };
 
 // Routing table
@@ -531,6 +547,7 @@ struct SSL_PIPE
 {
 	bool ServerMode;					// Whether it's in the server mode
 	bool IsDisconnected;				// Disconnected
+	int SslVersion;
 	SSL *ssl;							// SSL object
 	struct ssl_ctx_st *ssl_ctx;			// SSL_CTX
 	SSL_BIO *SslInOut;					// I/O BIO for the data in the SSL tunnel
@@ -799,10 +816,12 @@ struct RUDP_STACK
 struct CONNECT_SERIAL_PARAM
 {
 	LIST *IpList;
+	UINT LocalPort;						// Local port number to bind
+	IP   *LocalIP;						// Local IP address to bind. NULL address allowed to use.
+	IP   LocalIP_Cache;					// Local IP address to bind
 	UINT Port;
 	UINT Timeout;
 	char Hostname[MAX_SIZE];
-	char Hostname_Original[MAX_SIZE];
 	char HintStr[MAX_SIZE];
 	bool No_Get_Hostname;
 	bool *CancelFlag;
@@ -817,6 +836,8 @@ struct CONNECT_SERIAL_PARAM
 	UINT Delay;
 	UINT RetryDelay;
 	bool Tcp_TryStartSsl;
+	SSL_VERIFY_OPTION *SslOption;
+	UINT *SslErr;
 	bool Use_NatT;
 	bool Force_NatT;
 	IP *Ret_Ip;
@@ -843,9 +864,21 @@ struct CONNECT_TCP_RUDP_PARAM
 	UINT RUdpProtocol;
 	UINT Delay;
 	bool Tcp_TryStartSsl;
+	SSL_VERIFY_OPTION *SslOption;
+	UINT *SslErr;
 	LOCK *CancelLock;
 	SOCK *CancelDisconnectSock;
 	bool Tcp_InNegotiation;
+};
+
+struct SSL_VERIFY_OPTION
+{
+	bool VerifyPeer;				// Whether to verify SSL peer
+	bool PromptOnVerifyFail;		// Prompt on verification failure (Windows)
+	bool AddDefaultCA;				// Use default trust store
+	bool VerifyHostname;			// Verify server hostname
+	LIST *CaList;					// Trusted CA list
+	X *SavedCert;					// Saved server certificate
 };
 
 #define	SSL_DEFAULT_CONNECT_TIMEOUT		(15 * 1000)		// SSL default timeout
@@ -924,6 +957,10 @@ void ConnectThreadForRUDP(THREAD *thread, void *param);
 void ConnectThreadForOverDnsOrIcmp(THREAD *thread, void *param);
 void ConnectThreadForIPv4(THREAD *thread, void *param);
 void ConnectThreadForIPv6(THREAD *thread, void *param);
+
+void BindConnectThreadForIPv4(THREAD *thread, void *param);
+void BindConnectThreadForIPv6(THREAD *thread, void *param);
+
 SOCK *CreateTCPSock(SOCKET s, bool is_ipv6, IP *current_ip, bool no_get_hostname, char *hostname_original);
 SOCK *NewRUDPClientNatT(char *svc_name, IP *ip, UINT *error_code, UINT timeout, bool *cancel, char *hint_str, char *target_hostname);
 RUDP_STACK *NewRUDPServer(char *svc_name, RUDP_STACK_INTERRUPTS_PROC *proc_interrupts, RUDP_STACK_RPC_RECV_PROC *proc_rpc_recv, void *param, UINT port, bool no_natt_register, bool over_dns_mode, volatile UINT *natt_global_udp_port, UCHAR rand_port_id, IP *listen_ip);
@@ -1085,7 +1122,16 @@ SOCK *ConnectEx(char *hostname, UINT port, UINT timeout);
 SOCK *ConnectEx2(char *hostname, UINT port, UINT timeout, bool *cancel_flag);
 SOCK *ConnectEx3(char *hostname, UINT port, UINT timeout, bool *cancel_flag, char *nat_t_svc_name, UINT *nat_t_error_code, bool try_start_ssl, bool no_get_hostname);
 SOCK *ConnectEx4(char *hostname, UINT port, UINT timeout, bool *cancel_flag, char *nat_t_svc_name, UINT *nat_t_error_code, bool try_start_ssl, bool no_get_hostname, IP *ret_ip);
+SOCK *ConnectEx5(char *hostname, UINT port, UINT timeout, bool *cancel_flag, char *nat_t_svc_name, UINT *nat_t_error_code, bool try_start_ssl, bool no_get_hostname, SSL_VERIFY_OPTION *ssl_option, UINT *ssl_err, char *hint_str, IP *ret_ip);
 SOCKET ConnectTimeoutIPv4(IP *ip, UINT port, UINT timeout, bool *cancel_flag);
+
+// New function named with prefix "Bind" binds outgoing connection to a specific address. New one is wrapped in original one.
+#define	BIND_LOCALIP_NULL			NULL		// NULL IP address specifies no binding
+#define	BIND_LOCALPORT_NULL			0			// NULL port number specifies no binding
+SOCK *BindConnectEx4(IP *localIP, UINT localport, char *hostname, UINT port, UINT timeout, bool *cancel_flag, char *nat_t_svc_name, UINT *nat_t_error_code, bool try_start_ssl, bool no_get_hostname, IP *ret_ip);
+SOCK *BindConnectEx5(IP *localIP, UINT localport, char *hostname, UINT port, UINT timeout, bool *cancel_flag, char *nat_t_svc_name, UINT *nat_t_error_code, bool try_start_ssl, bool no_get_hostname, SSL_VERIFY_OPTION *ssl_option, UINT *ssl_err, char *hint_str, IP *ret_ip);
+SOCKET BindConnectTimeoutIPv4(IP *localIP, UINT localport, IP *ip, UINT port, UINT timeout, bool *cancel_flag);
+
 bool SetSocketBufferSize(SOCKET s, bool send, UINT size);
 UINT SetSocketBufferSizeWithBestEffort(SOCKET s, bool send, UINT size);
 void InitUdpSocketBufferSize(SOCKET s);
@@ -1109,6 +1155,7 @@ UINT SecureRecv(SOCK *sock, void *data, UINT size);
 bool StartSSL(SOCK *sock, X *x, K *priv);
 bool StartSSLEx(SOCK *sock, X *x, K *priv, UINT ssl_timeout, char *sni_hostname);
 bool StartSSLEx2(SOCK *sock, X *x, K *priv, LIST *chain, UINT ssl_timeout, char *sni_hostname);
+bool StartSSLEx3(SOCK *sock, X *x, K *priv, LIST *chain, UINT ssl_timeout, char *sni_hostname, SSL_VERIFY_OPTION *ssl_option, UINT *ssl_err);
 bool AddChainSslCert(struct ssl_ctx_st *ctx, X *x);
 void AddChainSslCertOnDirectory(struct ssl_ctx_st *ctx);
 bool SendAll(SOCK *sock, void *data, UINT size, bool secure);
@@ -1386,6 +1433,7 @@ struct SslClientCertInfo {
 SSL_PIPE *NewSslPipe(bool server_mode, X *x, K *k, DH_CTX *dh);
 SSL_PIPE *NewSslPipeEx(bool server_mode, X *x, K *k, DH_CTX *dh, bool verify_peer, struct SslClientCertInfo *clientcert);
 SSL_PIPE *NewSslPipeEx2(bool server_mode, X *x, K *k, LIST *chain, DH_CTX *dh, bool verify_peer, struct SslClientCertInfo *clientcert);
+SSL_PIPE* NewSslPipeEx3(bool server_mode, X* x, K* k, LIST* chain, DH_CTX* dh, bool verify_peer, struct SslClientCertInfo* clientcert, int tls13ticketscnt, bool disableTls13);
 void FreeSslPipe(SSL_PIPE *s);
 bool SyncSslPipe(SSL_PIPE *s);
 

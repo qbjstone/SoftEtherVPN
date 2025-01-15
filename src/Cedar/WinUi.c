@@ -903,7 +903,10 @@ void ShowWizard(HWND hWndParent, WIZARD *w, UINT start_id)
 	h.phpage = (HPROPSHEETPAGE *)pages_array;
 	h.pszbmHeader = MAKEINTRESOURCEW(w->Bitmap);
 	h.pszCaption = w->Caption;
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wincompatible-function-pointer-types"
 	h.pfnCallback = WizardDlgProc;
+    #pragma clang diagnostic pop
 
 	start_page = GetWizardPage(w, start_id);
 	if (start_page != NULL)
@@ -1329,7 +1332,7 @@ void WinConnectDlgThread(THREAD *thread, void *param)
 		nat_t_svc_name = d->nat_t_svc_name;
 	}
 
-	s = ConnectEx3(d->hostname, d->port, d->timeout, &d->cancel, nat_t_svc_name, &nat_t_error_code, d->try_start_ssl, false);
+	s = ConnectEx5(d->hostname, d->port, d->timeout, &d->cancel, nat_t_svc_name, &nat_t_error_code, d->try_start_ssl, false, d->ssl_option, d->ssl_err, d->hint_str, NULL);
 
 	d->ret_sock = s;
 	d->nat_t_error_code = nat_t_error_code;
@@ -1399,6 +1402,10 @@ UINT WinConnectDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, void *
 // TCP connection with showing the UI
 SOCK *WinConnectEx3(HWND hWnd, char *server, UINT port, UINT timeout, UINT icon_id, wchar_t *caption, wchar_t *info, UINT *nat_t_error_code, char *nat_t_svc_name, bool try_start_ssl)
 {
+	return WinConnectEx4(hWnd, server, port, timeout, icon_id, caption, info, nat_t_error_code, nat_t_svc_name, try_start_ssl, NULL, NULL, NULL);
+}
+SOCK *WinConnectEx4(HWND hWnd, char *server, UINT port, UINT timeout, UINT icon_id, wchar_t *caption, wchar_t *info, UINT *nat_t_error_code, char *nat_t_svc_name, bool try_start_ssl, SSL_VERIFY_OPTION *ssl_option, UINT *ssl_err, char *hint_str)
+{
 	wchar_t tmp[MAX_SIZE];
 	wchar_t tmp2[MAX_SIZE];
 	WINCONNECT_DLG_DATA d;
@@ -1440,6 +1447,9 @@ SOCK *WinConnectEx3(HWND hWnd, char *server, UINT port, UINT timeout, UINT icon_
 	d.timeout = timeout;
 	d.hostname = server;
 	d.port = port;
+	d.ssl_option = ssl_option;
+	d.ssl_err = ssl_err;
+	d.hint_str = hint_str;
 	StrCpy(d.nat_t_svc_name, sizeof(d.nat_t_svc_name), nat_t_svc_name);
 
 	Dialog(hWnd, D_CONNECT, WinConnectDlgProc, &d);
@@ -3480,7 +3490,10 @@ HWND SearchWindow(wchar_t *caption)
 	p.caption = caption;
 	p.hWndFound = NULL;
 
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wincompatible-function-pointer-types"
 	EnumWindows(SearchWindowEnumProc, (LPARAM)&p);
+    #pragma clang diagnostic pop
 
 	return p.hWndFound;
 }

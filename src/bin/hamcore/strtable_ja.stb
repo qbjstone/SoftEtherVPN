@@ -214,7 +214,10 @@ ERR_145					この操作は実行できません。VPN Gate 公開 VPN 中継サ
 ERR_146					VPN Gate サービスが VPN Client 内で動作している場合は、この設定画面から VPN Gate サービスを停止することはできません。VPN Gate サービスを停止するには、VPN Client 接続マネージャの設定ツールを使用してください。
 ERR_147					この機能はオープンソース版 SoftEther VPN にはまだ実装されていません。
 ERR_148					Windows システムがサスペンド状態に移行中のため、VPN 通信が切断されました。
-
+ERR_149					接続先サーバーの提示した証明書が指定したホスト名と一致しません。
+ERR_150					両側でサポートされている TLS バージョンが見つかりませんでした。どちらかが相手側で無効になっている古い TLS バージョンを使用している可能性があります。
+ERR_151					両側でサポートされている暗号化アルゴリズムが見つからなかったか、指定されたアルゴリズムがサーバー証明書と互換性がありません。
+ERR_152					TLS ハンドシェイクが失敗しました。
 
 
 # ライセンス関係
@@ -575,6 +578,7 @@ HUB_AO_MaxLoggedPacketsPerMinute			1 分間あたりにパケットログに保�
 HUB_AO_DoNotSaveHeavySecurityLogs			保存に負荷がかかるセキュリティログを保存しない設定をします。
 HUB_AO_DropBroadcastsInPrivacyFilterMode	送信元および宛先の両方のセッションがプライバシーフィルタモードの場合、ブロードキャストパケットを破棄します。
 HUB_AO_DropArpInPrivacyFilterMode			送信元および宛先の両方のセッションがプライバシーフィルタモードの場合、ARP パケットを破棄します。
+HUB_AO_AllowSameUserInPrivacyFilterMode			プライバシーフィルターモードであっても、送信元セッションと宛先セッションの両方が同じユーザーである場合は、パケットを許可します。
 HUB_AO_SuppressClientUpdateNotification		VPN Client のアップデート通知画面の表示を抑制します。
 HUB_AO_FloodingSendQueueBufferQuota			パケットの仮想 HUB 内におけるフラッディング動作時において消費することを許容する送信キューのバッファサイズの制限値 (バイト数) を指定します。クオータは、すべての接続中の VPN セッションの送信キューの合計長さに対してグローバルに適用されます。0 を指定すると無制限になります。このオプションは、フラッディングパケットが多発するネットワークにおいてメモリ消費量が増大する問題を解決するために利用できます。
 HUB_AO_AssignVLanIdByRadiusAttribute		VLAN ID の動的割り当て機能を有効にします。VPN 接続するユーザーオブジェクトのセキュリティポリシーに VLAN ID が指定されていない場合は、各 VPN セッションはユーザー認証を行った RADIUS サーバーから返却される RADIUS 属性の値に基づき VLAN が割当てられます。RADIUS 属性のうち、 "Tunnel-Pvt-Group-ID" (ID = 81) の値が使用されます。データ型は文字列である必要があります。
@@ -584,6 +588,7 @@ HUB_AO_DetectDormantSessionInterval			この項目が 0 以外の場合は、指
 HUB_AO_NoPhysicalIPOnPacketLog				この項目が 1 (有効) の場合は、パケットログに送信元および宛先 VPN セッションの物理的な接続元 VPN クライアントの IP アドレスが記録されないようになります。
 HUB_AO_UseHubNameAsDhcpUserClassOption		この項目が 1 (有効) の場合は、仮想 HUB は DHCP サーバーに対して IP アドレスの取得を要求する際に仮想 HUB 名を DHCP パケットの "User-Class" オプションに埋め込むようになります。この機能は、複数の仮想 HUB がある場合に、DHCP サーバーがそれぞれの仮想 HUB 用に IP プールを確保する場合に便利です。(L2TP/IPsec および OpenVPN セッションのみ対応。)
 HUB_AO_UseHubNameAsRadiusNasId				この項目が 1 (有効) の場合は、NAS-Identifier RADIUS 属性に仮想 HUB 名が埋め込まれます。この機能は、RADIUS サーバにおいて仮想 HUB ごとにアクセスの許可 / 拒否を設定したい場合に便利です。
+HUB_AO_AllowEapMatchUserByCert				If you enable (set to 1) this option, the Virtual Hub will attempt to match the EAP Identity not only with usernames, but also with user certificates during the PPP EAP authentication flow.
 
 
 # Caps 関係
@@ -839,12 +844,14 @@ CM_ST_NO_VLAN			－
 CM_ST_USE_ENCRYPT		暗号化の使用
 CM_ST_USE_ENCRYPT_TRUE	はい (暗号化アルゴリズム: %S)
 CM_ST_USE_ENCRYPT_TRUE2	はい
+CM_ST_USE_ENCRYPT_TRUE3	はい (%S 暗号化アルゴリズム: %S)
 CM_ST_USE_ENCRYPT_FALSE	いいえ (暗号化なし)
 CM_ST_USE_COMPRESS		圧縮の使用
 CM_ST_UDP_ACCEL_ENABLED	UDP 高速化機能をサポート
 CM_ST_UDP_ACCEL_USING	UDP 高速化機能を使用中
 CM_ST_RUDP				TCP over UDP (NAT Traversal)
 CM_ST_UNDERLAY_PROTOCOL	物理通信に使用中のプロトコル
+CM_ST_PROTOCOL_DETAILS	プロトコル詳細
 CM_ST_COMPRESS_TRUE		はい (約 %u %%)
 CM_ST_COMPRESS_FALSE	いいえ (圧縮無し)
 CM_ST_SESSION_NAME		セッション名
@@ -964,11 +971,10 @@ CM_VPN_FILE_IMPORT_NG	接続設定ファイルをインポートできません�
 CM_VLAN_INSTALLING		しばらくお待ちください...
 CM_SECURE_MUST_LOCAL	現在リモートコンピュータの VPN Client サービスに接続して管理しているため、スマートカードの設定を行うことはできません。
 CM_DETAIL_MODE_LINK_STR	カスケード接続では、常に [ブリッジ / ルータモードで接続] が有効になっています。
-CM_TRAY_INITING			SoftEther VPN クライアント接続マネージャ (Developer Edition)
-CM_TRAY_NOT_CONNECTED	SoftEther VPN クライアント接続マネージャ (Developer Edition)\r\n接続していません
-CM_TRAY_CONNECTED_0		SoftEther VPN クライアント接続マネージャ (Developer Edition)\r\n%u 個のサーバーとの接続が完了し、%u 個のサーバーに接続を試行しています
-CM_TRAY_CONNECTED_1		SoftEther VPN クライアント接続マネージャ (Developer Edition)\r\n%u 個のサーバーに接続を試行しています
-CM_TRAY_CONNECTED_2		SoftEther VPN クライアント接続マネージャ (Developer Edition)\r\n%u 個のサーバーと接続が完了しています
+CM_TRAY_INITING			SoftEther VPN
+CM_TRAY_NOT_CONNECTED	\r\n接続していません
+CM_TRAY_CONNECTING		\r\n接続処理中
+CM_TRAY_CONNECTED		\r\n接続完了
 CM_TRAY_MENU_1_SHOW		接続マネージャを表示する(&S)
 CM_TRAY_MENU_1_HIDE		接続マネージャを閉じる(&O)
 CM_TRAY_MENU_2_QUIT		接続マネージャプログラムの終了(&X)
@@ -1769,8 +1775,9 @@ LS_HUB_STOP				仮想 HUB "%S" を停止しました。
 LS_HUB_MAC				仮想 HUB "%S" の MAC アドレスは "%S" です。
 LS_NODE_INFO_TAG		クライアント製品名 "%S", クライアントバージョン %u, クライアントビルド番号 %u, サーバー製品名 "%S", サーバーバージョン %u, サーバービルド番号 %u, クライアント OS 名 "%S", クライアント OS バージョン "%S", クライアントプロダクト ID "%S", クライアントホスト名 "%S", クライアント IP アドレス "%S", クライアントポート番号 %u, サーバーホスト名 "%S", サーバー IP アドレス "%S", サーバーポート番号 %u, プロキシホスト名 "%S", プロキシ IP アドレス "%S", プロキシポート番号 %u, 仮想 HUB 名 "%S", クライアントユニーク ID "%S"
 LS_CONNECTION_START_1	クライアント (IP アドレス %S, ホスト名 "%S", ポート番号 %u) に対応するコネクション "%S" が作成されました。
+LS_SSL_START_ERROR		コネクション "%S" に対する SSL 通信を開始できませんでした。エラー: %s (コード %u)
 LS_CONNECTION_END_1		コネクション "%S" が終了しました。
-LS_SSL_START			コネクション "%S" に対する SSL 通信が開始されました。暗号化アルゴリズム名は "%S" です。
+LS_SSL_START			コネクション "%S" に対する SSL 通信が開始されました。プロトコルバージョンは %S です。暗号化アルゴリズム名は "%S" です。
 LS_CONNECTION_ERROR		コネクション "%S" は理由 "%s" (コード %u) で終了しました。
 LS_FARMMEMBER_NOT_ADMIN	コネクション "%S": サーバーはクラスタメンバですが、クライアントは仮想 HUB "%S" に管理者ユーザー "%S" 以外で直接接続しようと試みました。クライアントが提示したユーザー名は "%S" です。アクセスは許可されません。
 LS_HUB_NOT_FOUND		コネクション "%S": クライアントが接続しようとした仮想 HUB "%S" はサーバー上に存在しません。
@@ -1798,6 +1805,8 @@ LS_LICENSE_VIOLATION_DETECTED	ライセンス違反を検出しました。別�
 LS_API_AUTH_OK			HTTPS API クライアント "%r:%u" (%S): 管理モード: "%S" で組み込み HTTPS Web サーバーを用いてログインに成功しました。使用されたユーザー名: "%S", メソッド: "%S", パス: "%S"
 LS_API_AUTH_ERROR		HTTPS API クライアント "%r:%u" (%S): 組み込み HTTPS Web サーバーを用いてログインに失敗しました。使用されたユーザー名: "%S", メソッド: "%S", パス: "%S"
 LS_API_RPC_CALL			HTTPS API クライアント "%r:%u" (%S): JSON-API を呼び出しました。メソッド名: "%S", 結果エラーコード: %u (0 = 成功), 結果エラーメッセージ: "%s"
+LS_AZURE_START			クライアント (IP アドレス %S, ポート番号 %u) から VPN Azure 接続要求を受信しました。
+LS_AZURE_SSL_ERROR		VPN Azure リレーサーバーとの SSL 通信を開始できませんでした。エラー: %s (コード %u)
 
 
 # (Proto ログ)
@@ -1918,6 +1927,7 @@ LH_AUTH_PASSWORD		パスワード認証
 LH_AUTH_PLAIN_PASSWORD	外部サーバー認証
 LH_AUTH_CERT			証明書認証
 LH_AUTH_TICKET			チケット認証
+LH_AUTH_EXTERNAL		外部サーバー認証
 LH_AUTH_WIREGUARD_KEY	WireGuard 公開鍵認証
 LH_AUTH_OPENVPN_CERT    OpenVPN 証明書認証
 LH_AUTH_RADIUS_NOT_SUPPORT	コネクション "%S": ユーザー "%S" の認証方法として RADIUS 認証または Active Directory 認証 (NT ドメイン認証) が指定されましたが、現在の VPN Server のエディションは "%S" であるため、RADIUS 認証または Active Directory 認証 (NT ドメイン認証) を使用することができません。接続は拒否されます。
@@ -2091,6 +2101,7 @@ LC_DELETE_ACCOUNT		接続設定 "%s" を削除しました。
 LC_RENAME_ACCOUNT		接続設定 "%s" の名前を "%s" に変更しました。
 LC_CONNECT				接続設定 "%s" への接続処理を開始しました。
 LC_CONNECT_1			接続設定 "%s": %u 回目の接続動作を開始します。
+LC_SSL_CONNECTED		接続設定 "%s": SSL 通信が開始されました。プロトコルバージョンは %S です。暗号化アルゴリズム名は "%S" です。
 LC_CONNECT_2			接続設定 "%s": 接続が完了しました。セッション名: "%S"
 LC_CONNECT_ERROR		接続設定 "%s": 接続が切断されたか、接続に失敗しました。理由: %s (コード %u)
 LC_DISCONNECT			接続設定 "%s" を切断します。
@@ -2328,6 +2339,7 @@ R_SOCKS5				SOCKS5 プロキシサーバー経由接続(&S)
 B_PROXY_CONFIG			プロキシサーバーの接続設定(&2)
 STATIC11				サーバー証明書の検証オプション(&F):
 R_CHECK_CERT			サーバー証明書を必ず検証する(&3)
+R_TRUST_DEFAULT			システム証明書ストアを信頼する
 B_TRUST					信頼する証明機関の証明書の管理(&4)
 B_SERVER_CERT			固有証明書の登録(&R)
 B_VIEW_SERVER_CERT		固有証明書の表示(&5)
@@ -2412,6 +2424,8 @@ STATIC17				その他の設定(&G):
 R_NO_ROUTING			ルーティングテーブルの調整処理を行わない(&R)
 STATIC18				この設定画面の設定項目は、システム管理者から指示があった場合や、ネットワークやセキュリティに関して詳しい知識をお持ちの場合以外は変更しないでください。
 STATIC19				VoIP / QoS 対応機能を使用すると、IP 電話パケットなどの優先度の高いパケットを VPN 内で高速に伝送できます。
+STATIC20				送信元IPアドレス:
+STATIC21				送信元ポート番号:
 R_DISABLE_QOS			VoIP / QoS 対応機能を無効にする(&Q)
 IDOK					&OK
 IDCANCEL				キャンセル
@@ -2455,7 +2469,7 @@ STATIC1					VPN Client の動作に関する設定を変更できます。
 STATIC2					リモート管理の設定(&E)
 STATIC3					VPN Client サービスプログラムを別のコンピュータ上から VPN クライアント接続マネージャによってリモート管理することが可能です。
 R_ALLOW_REMOTE_CONFIG	VPN Client サービスのリモート管理を許可する(&R)
-S_WARNING				リモート管理を許可する場合、パスワードを設定しておくことを強くお勧めします。パスワードは [ツール] メニューの [パスワードの設定] をクリックして設定することができます。
+S_WARNING				リモート管理を許可する場合、パスワードを設定する必要があります。パスワードは [ツール] メニューの [パスワードの設定] をクリックして設定することができます。リモート管理の可否の変更の設定適用には、VPN Client サービスを再起動する必要があります。
 STATIC4					一定期間無通信状態が続くと接続が自動的に切断されるようなネットワーク接続環境の場合、インターネット上の任意のサーバーに対して一定間隔ごとにパケットを送信することにより、インターネット接続を維持することができます。
 R_USE_KEEP_CONNECT		インターネット接続の維持機能を使用する(&K)
 S_HOSTNAME				ホスト名(&H):
@@ -4401,6 +4415,7 @@ CMD_ACCOUNT_COLUMN_PROXY_USERNAME	プロキシサーバーのユーザー名
 CMD_ACCOUNT_COLUMN_SERVER_CERT_USE	サーバー証明書の検証
 CMD_ACCOUNT_COLUMN_SERVER_CERT_NAME	登録されているサーバー固有証明書
 CMD_ACCOUNT_COLUMN_RETRY_ON_SERVER_CERT	サーバー証明書が信頼できない場合に接続を再試行する
+CMD_ACCOUNT_COLUMN_ADD_DEFAULT_CA   システム証明書ストアを信頼する
 CMD_ACCOUNT_COLUMN_DEVICE_NAME		接続に使用するデバイス名
 CMD_ACCOUNT_COLUMN_AUTH_TYPE		認証の種類
 CMD_ACCOUNT_COLUMN_AUTH_USERNAME	ユーザー名
@@ -5047,7 +5062,7 @@ CMD_WgkDelete_Prompt_[key]	公開鍵:
 
 
 # WgkEnum コマンド
-CMD_WgkEnum				Wireguard 公開鍵一覧の取得
+CMD_WgkEnum				WireGuard 公開鍵一覧の取得
 CMD_WgkEnum_Help		現在サーバーに登録されている WireGuard 公開鍵の一覧を取得します。\nWgkAdd コマンドで公開鍵の追加を、WgkDelete コマンドで公開鍵の削除を行うことができます。\nこのコマンドを実行するには、VPN Server の管理者権限が必要です。
 CMD_WgkEnum_Args		WgkEnum
 CMD_WgkEnum_Column_Key	公開鍵
@@ -5498,6 +5513,20 @@ CMD_CascadeServerCertDisable	カスケード接続のサーバー証明書の検
 CMD_CascadeServerCertDisable_Help	現在管理している仮想 HUB に登録されているカスケード接続を指定し、そのカスケード接続が VPN Server に対して接続する際に、接続先の VPN Server の提示する SSL 証明書が、信頼できるかどうか検査するオプションを無効にします。\nこのコマンドは、クラスタとして動作している VPN Server の仮想 HUB では実行できません。
 CMD_CascadeServerCertDisable_Args	CascadeServerCertDisable [name]
 CMD_CascadeServerCertDisable_[name]	設定を変更するカスケード接続の名前を指定します。
+
+
+# CascadeDefaultCAEnable コマンド
+CMD_CascadeDefaultCAEnable	        システム証明書ストアからの証明書の信頼を有効化
+CMD_CascadeDefaultCAEnable_Help	    サーバー証明書の検証が有効になっている場合、システム証明書ストアからの証明書の信頼を有効にします。\nサーバー証明書の検証が無効になっている場合、このオプションは何もしません。
+CMD_CascadeDefaultCAEnable_Args	    CascadeDefaultCAEnable [name]
+CMD_CascadeDefaultCAEnable_[name]	設定を変更するカスケード接続の名前を指定します。
+
+
+# CascadeDefaultCADisable コマンド
+CMD_CascadeDefaultCADisable         システム証明書ストアからの証明書の信頼を無効化
+CMD_CascadeDefaultCADisable_Help    サーバー証明書の検証が有効になっている場合、システム証明書ストアからの証明書の信頼を無効にします。\nサーバー証明書の検証が無効になっている場合、このオプションは何もしません。
+CMD_CascadeDefaultCADisable_Args	CascadeDefaultCADisable [name]
+CMD_CascadeDefaultCADisable_[name]	設定を変更するカスケード接続の名前を指定します。
 
 
 # CascadeServerCertSet コマンド
@@ -6443,7 +6472,7 @@ CMD_VpnAzureGetStatus_PRINT_CONNECTED	VPN Azure クラウドサーバーへ接�
 CMD_VpnAzureGetStatus_PRINT_HOSTNAME	VPN Azure サービス上でのホスト名
 
 
-# VpnAzureSetStatus コマンド
+# VpnAzureSetEnable コマンド
 CMD_VpnAzureSetEnable			VPN Azure 機能の有効化 / 無効化
 CMD_VpnAzureSetEnable_Help		VPN Azure 機能を有効または無効にします。\n\nVPN Azure により、会社のパソコンに自宅や外出先のパソコンから非常に簡単に VPN 接続できるようになります。VPN 接続中は会社のパソコンを経由して、社内 LAN の他のサーバーにもアクセスできます。\n会社のパソコン (VPN Server) にはグローバル IP アドレスは不要です。ファイアウォールや NAT の内側であっても動作し、ネットワーク管理者による設定は一切必要ありません。VPN クライアントとなる自宅のパソコンでは、Windows に標準付属の SSTP VPN クライアントを使用できます。\nVPN Azure は、SoftEther VPN Server をお使いの方はどなたでも無料で利用できるクラウド VPN サービスです。ソフトイーサ株式会社によって運営されています。使い方は http://www.vpnazure.net/ に掲載されています。\n\nVPN Azure ホスト名はダイナミック DNS サービスのホスト名のドメイン部分を "vpnazure.net" に変更したものが使用されます。ホスト名を変更するには DynamicDnsSetHostname コマンドを使用してください。\n\nこのコマンドを実行するには、VPN Server の管理者権限が必要です。\nこのコマンドは、VPN Bridge では実行できません。\nこのコマンドは、クラスタとして動作している VPN Server の仮想 HUB では実行できません。
 CMD_VpnAzureSetEnable_Args		VpnAzureSetEnable [yes|no]
@@ -6801,7 +6830,6 @@ CMD_AccountServerCertDisable_[name]	設定を変更する接続設定の名前�
 # AccountRetryOnServerCertEnable コマンド
 CMD_AccountRetryOnServerCertEnable	接続設定のサーバー証明書が信頼できない場合の接続再試行を有効化
 CMD_AccountRetryOnServerCertEnable_Help	接続設定のサーバー証明書の検証プションが有効になっている状態で、 VPN Server の証明書が信頼できない場合、直ちに接続を解除して再試行を繰り返します。AccountRetryOnServerCertDisableコマンドを使用することにより再試行を行わないように設定することができますが、このコマンドを使用することにより、デフォルトの接続再試行を行う状態に戻すことができます。
-
 CMD_AccountRetryOnServerCertEnable_Args	AccountRetryOnServerCertEnable [name]
 CMD_AccountRetryOnServerCertEnable_[name]	設定を変更する接続設定の名前を指定します。
 
@@ -6811,6 +6839,20 @@ CMD_AccountRetryOnServerCertDisable	接続設定のサーバー証明書が信�
 CMD_AccountRetryOnServerCertDisable_Help	接続設定のサーバー証明書の検証プションが有効になっている状態で、 VPN Server の証明書が信頼できない場合、直ちに接続を解除して再試行を繰り返しますが、このコマンドを使用することにより再試行を行わないように設定することができます。
 CMD_AccountRetryOnServerCertDisable_Args	AccountRetryOnServerCertDisable [name]
 CMD_AccountRetryOnServerCertDisable_[name]	設定を変更する接続設定の名前を指定します。
+
+
+# AccountDefaultCAEnable コマンド
+CMD_AccountDefaultCAEnable	        システム証明書ストアからの証明書の信頼を有効化
+CMD_AccountDefaultCAEnable_Help	    サーバー証明書の検証が有効になっている場合、システム証明書ストアからの証明書の信頼を有効にします。\nサーバー証明書の検証が無効になっている場合、このオプションは何もしません。
+CMD_AccountDefaultCAEnable_Args	    AccountDefaultCAEnable [name]
+CMD_AccountDefaultCAEnable_[name]	設定を変更する接続設定の名前を指定します。
+
+
+# AccountDefaultCADisable コマンド
+CMD_AccountDefaultCADisable         システム証明書ストアからの証明書の信頼を無効化
+CMD_AccountDefaultCADisable_Help    サーバー証明書の検証が有効になっている場合、システム証明書ストアからの証明書の信頼を無効にします。\nサーバー証明書の検証が無効になっている場合、このオプションは何もしません。
+CMD_AccountDefaultCADisable_Args	AccountDefaultCADisable [name]
+CMD_AccountDefaultCADisable_[name]	設定を変更する接続設定の名前を指定します。
 
 
 # AccountServerCertSet コマンド
@@ -6980,13 +7022,13 @@ CMD_AccountImport_OK	接続設定 "%s" としてインポートしました。
 
 # RemoteEnable コマンド
 CMD_RemoteEnable		VPN Client サービスのリモート管理の許可
-CMD_RemoteEnable_Help	VPN Client サービスに、localhost 以外のリモートコンピュータから、コマンドライン管理ユーティリティまたは VPN クライアント接続マネージャでリモート接続して管理することを許可します。
+CMD_RemoteEnable_Help	VPN Client サービスに、localhost 以外のリモートコンピュータから、コマンドライン管理ユーティリティまたは VPN クライアント接続マネージャでリモート接続して管理することを許可します。注意: リモート管理の可否の変更の設定適用には、VPN Client サービスを再起動する必要があります。リモート管理を許可する場合、パスワードを設定する必要があります。
 CMD_RemoteEnable_Args	RemoteEnable
 
 
 # RemoteDisable コマンド
 CMD_RemoteDisable		VPN Client サービスのリモート管理の禁止
-CMD_RemoteDisable_Help	VPN Client サービスに、localhost 以外のリモートコンピュータからコマンドライン管理ユーティリティまたは VPN クライアント接続マネージャでリモート接続して管理することを禁止します。
+CMD_RemoteDisable_Help	VPN Client サービスに、localhost 以外のリモートコンピュータからコマンドライン管理ユーティリティまたは VPN クライアント接続マネージャでリモート接続して管理することを禁止します。注意: リモート管理の可否の変更の設定適用には、VPN Client サービスを再起動する必要があります。
 CMD_RemoteDisable_Args	RemoteDisable
 
 
@@ -7002,20 +7044,20 @@ CMD_RemoteDisable_Args	RemoteDisable
 
 
 # GenX25519 コマンド
-CMD_GenX25519				Create new X25519 keypair
-CMD_GenX25519_Help			Use this to create a new X25519 keypair, which can be used for WireGuard. \nBoth the private and public key will be shown. \nThe public key can be shared and is used to identify a peer. \nAlso, it can always be retrieved from the private key using the GetPublicX25519 command. \nThe private key should be kept in a secure place and never be shared. \nIt cannot be recovered once lost.
+CMD_GenX25519				新しい X25519 の鍵ペアを生成
+CMD_GenX25519_Help			WireGuard で使用する X25519 鍵ペアを生成します。コマンドを実行すると公開鍵と秘密鍵の両方が表示されます。公開鍵は相手側と共有しピアを識別するために使用されますが、秘密鍵は安全な場所に保存し決して他者とは共有しないでください。また、公開鍵はいつでも GetPublicX25519 コマンドを使用して秘密鍵から再取得することができますが、一度紛失した秘密鍵を復元することはできません。
 CMD_GenX25519_ARGS			GenX25519
-CMD_GenX25519_PRIVATE_KEY	Private key: 
-CMD_GenX25519_PUBLIC_KEY	Public key: 
+CMD_GenX25519_PRIVATE_KEY	秘密鍵: 
+CMD_GenX25519_PUBLIC_KEY	公開鍵: 
 
 
 # GetPublicX25519 コマンド
-CMD_GetPublicX25519				Retrieve public X25519 key from a private one
-CMD_GetPublicX25519_Help		Use this if you have a private X25519 key and want to get its corresponding public key.
+CMD_GetPublicX25519				X25519 秘密鍵から公開鍵を取得
+CMD_GetPublicX25519_Help		指定した X25519 秘密鍵に対応する公開鍵を取得します。
 CMD_GetPublicX25519_ARGS    	GetPublicX25519 [private]
-CMD_GetPublicX25519_[private]	The private X25519 key you want to get the corresponding public key of.
-CMD_GetPublicX25519_PRIVATE_KEY	Private key: 
-CMD_GetPublicX25519_PUBLIC_KEY	Public key: 
+CMD_GetPublicX25519_[private]	対応する公開鍵を取得したい X25519 秘密鍵を指定します。
+CMD_GetPublicX25519_PRIVATE_KEY	秘密鍵: 
+CMD_GetPublicX25519_PUBLIC_KEY	公開鍵: 
 
 
 # MakeCert コマンド

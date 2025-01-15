@@ -9,6 +9,7 @@
 #define	PROTO_PPP_H
 
 #include "CedarType.h"
+#include "Proto_IPsec.h"
 
 #include "Mayaqua/TcpIp.h"
 
@@ -229,6 +230,8 @@ struct PPP_EAP_TLS_CONTEXT
 	UCHAR *CachedBufferRecvPntr;
 	UCHAR *CachedBufferSend;
 	UCHAR *CachedBufferSendPntr;
+	bool DisableTls13;
+	int Tls13SessionTicketsCount;
 };
 
 // PPP request resend
@@ -291,7 +294,7 @@ struct PPP_SESSION
 	UINT MsChapV2_ErrorCode;			// Authentication failure error code of MS-CHAPv2
 	UINT MsChapV2_PacketId;				// MS-CHAPv2 Packet ID
 
-	bool MsChapV2_UseDoubleMsChapV2;	// Use the double-MSCHAPv2 technique
+	bool UseEapRadius;					// Use EAP for RADIUS authentication
 	EAP_CLIENT *EapClient;				// EAP client
 
 	UCHAR ServerInterfaceId[8];			// Server IPv6CP Interface Identifier
@@ -302,7 +305,8 @@ struct PPP_SESSION
 	// EAP contexts
 	UINT Eap_Protocol;					// Current EAP Protocol used
 	UINT Eap_PacketId;					// EAP Packet ID;
-	UCHAR Eap_Identity[MAX_SIZE];		// Received from client identity
+	ETHERIP_ID Eap_Identity;			// Received from client identity
+	bool Eap_MatchUserByCert;			// Attempt to match the user from it's certificate during EAP-TLS, ignoring the EAP-identification
 	PPP_EAP_TLS_CONTEXT Eap_TlsCtx;		// Context information for EAP TLS. May be possibly reused for EAP TTLS?
 
 	LIST *SentReqPacketList;			// Sent requests list
@@ -339,6 +343,7 @@ bool PPPProcessCHAPResponsePacketEx(PPP_SESSION *p, PPP_PACKET *pp, PPP_PACKET *
 bool PPPProcessIPCPResponsePacket(PPP_SESSION *p, PPP_PACKET *pp, PPP_PACKET *req);
 bool PPPProcessEAPResponsePacket(PPP_SESSION *p, PPP_PACKET *pp, PPP_PACKET *req);
 bool PPPProcessIPv6CPResponsePacket(PPP_SESSION *p, PPP_PACKET *pp, PPP_PACKET *req);
+bool PPPProcessEapResponseForRadius(PPP_SESSION *p, PPP_EAP *eap_packet, UINT eap_datasize);
 // Request packets
 bool PPPProcessRequestPacket(PPP_SESSION *p, PPP_PACKET *pp);
 bool PPPProcessLCPRequestPacket(PPP_SESSION *p, PPP_PACKET *pp);
@@ -387,7 +392,7 @@ bool PPPSetIPOptionToLCP(PPP_IPOPTION *o, PPP_LCP *c, bool only_modify);
 bool PPPGetIPAddressValueFromLCP(PPP_LCP *c, UINT type, IP *ip);
 bool PPPSetIPAddressValueToLCP(PPP_LCP *c, UINT type, IP *ip, bool only_modify);
 // EAP packet utilities
-bool PPPProcessEAPTlsResponse(PPP_SESSION *p, PPP_EAP *eap_packet, UINT eapTlsSize);
+bool PPPProcessEAPTlsResponse(PPP_SESSION *p, PPP_EAP *eap_packet, UINT eapSize);
 PPP_LCP *BuildEAPPacketEx(UCHAR code, UCHAR id, UCHAR type, UINT datasize);
 PPP_LCP *BuildEAPTlsPacketEx(UCHAR code, UCHAR id, UCHAR type, UINT datasize, UCHAR flags);
 PPP_LCP *BuildEAPTlsRequest(UCHAR id, UINT datasize, UCHAR flags);
@@ -409,6 +414,7 @@ bool PPPParseUsername(CEDAR *cedar, char *src, ETHERIP_ID *dst);
 void GenerateNtPasswordHash(UCHAR *dst, char *password);
 void GenerateNtPasswordHashHash(UCHAR *dst_hash, UCHAR *src_hash);
 void MsChapV2Server_GenerateChallenge(UCHAR *dst);
+void MsChapV2Client_GenerateChallenge(UCHAR *dst);
 void MsChapV2_GenerateChallenge8(UCHAR *dst, UCHAR *client_challenge, UCHAR *server_challenge, char *username);
 void MsChapV2Client_GenerateResponse(UCHAR *dst, UCHAR *challenge8, UCHAR *nt_password_hash);
 void MsChapV2Server_GenerateResponse(UCHAR *dst, UCHAR *nt_password_hash_hash, UCHAR *client_response, UCHAR *challenge8);
